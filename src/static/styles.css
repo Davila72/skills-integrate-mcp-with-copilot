@@ -16,16 +16,56 @@ body {
 }
 
 header {
-  text-align: center;
-  padding: 20px 0;
+  padding: 20px;
   margin-bottom: 30px;
   background-color: #1a237e;
   color: white;
   border-radius: 5px;
 }
 
+.header-content {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.header-content > div {
+  text-align: left;
+}
+
 header h1 {
   margin-bottom: 10px;
+}
+
+.auth-button {
+  background-color: white;
+  color: #1a237e;
+  border: 2px solid white;
+  padding: 10px 20px;
+  font-size: 14px;
+  font-weight: bold;
+  border-radius: 5px;
+  cursor: pointer;
+  transition: all 0.3s;
+}
+
+.auth-button:hover {
+  background-color: #3949ab;
+  color: white;
+  border-color: white;
+}
+
+.auth-button.authenticated {
+  background-color: #4caf50;
+  color: white;
+  border-color: #4caf50;
+}
+
+.auth-button.authenticated:hover {
+  background-color: #388e3c;
+  border-color: #388e3c;
 }
 
 main {

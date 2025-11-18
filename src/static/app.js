@@ -3,6 +3,10 @@ document.addEventListener("DOMContentLoaded", () => {
   const activitySelect = document.getElementById("activity");
   const signupForm = document.getElementById("signup-form");
   const messageDiv = document.getElementById("message");
+  
+  // Authentication state
+  let authCredentials = null;
+  let isAuthenticated = false;
 
   // Function to fetch activities from API
   async function fetchActivities() {
@@ -73,6 +77,11 @@ document.addEventListener("DOMContentLoaded", () => {
     const activity = button.getAttribute("data-activity");
     const email = button.getAttribute("data-email");
 
+    if (!isAuthenticated) {
+      promptLogin(() => handleUnregister(event));
+      return;
+    }
+
     try {
       const response = await fetch(
         `/activities/${encodeURIComponent(
@@ -80,6 +89,9 @@ document.addEventListener("DOMContentLoaded", () => {
         )}/unregister?email=${encodeURIComponent(email)}`,
         {
           method: "DELETE",
+          headers: {
+            'Authorization': 'Basic ' + authCredentials
+          }
         }
       );
 
@@ -114,6 +126,11 @@ document.addEventListener("DOMContentLoaded", () => {
   signupForm.addEventListener("submit", async (event) => {
     event.preventDefault();
 
+    if (!isAuthenticated) {
+      promptLogin(() => signupForm.dispatchEvent(new Event('submit')));
+      return;
+    }
+
     const email = document.getElementById("email").value;
     const activity = document.getElementById("activity").value;
 
@@ -124,6 +141,9 @@ document.addEventListener("DOMContentLoaded", () => {
         )}/signup?email=${encodeURIComponent(email)}`,
         {
           method: "POST",
+          headers: {
+            'Authorization': 'Basic ' + authCredentials
+          }
         }
       );
 
@@ -154,6 +174,62 @@ document.addEventListener("DOMContentLoaded", () => {
       console.error("Error signing up:", error);
     }
   });
+
+  // Login functionality
+  function promptLogin(callback) {
+    const username = prompt("Teacher Login\n\nUsername:");
+    if (!username) return;
+    
+    const password = prompt("Password:");
+    if (!password) return;
+    
+    // Create base64 encoded credentials
+    authCredentials = btoa(username + ':' + password);
+    
+    // Verify credentials
+    fetch('/auth/verify', {
+      method: 'POST',
+      headers: {
+        'Authorization': 'Basic ' + authCredentials
+      }
+    })
+    .then(response => {
+      if (response.ok) {
+        isAuthenticated = true;
+        updateAuthUI();
+        if (callback) callback();
+      } else {
+        authCredentials = null;
+        alert('Invalid credentials. Please try again.');
+      }
+    })
+    .catch(error => {
+      authCredentials = null;
+      alert('Login failed. Please try again.');
+    });
+  }
+  
+  function logout() {
+    authCredentials = null;
+    isAuthenticated = false;
+    updateAuthUI();
+  }
+  
+  function updateAuthUI() {
+    const authButton = document.getElementById('auth-button');
+    if (isAuthenticated) {
+      authButton.textContent = 'Logout';
+      authButton.onclick = logout;
+      authButton.classList.add('authenticated');
+    } else {
+      authButton.textContent = 'Teacher Login';
+      authButton.onclick = () => promptLogin();
+      authButton.classList.remove('authenticated');
+    }
+  }
+  
+  // Initialize auth UI
+  updateAuthUI();
 
   // Initialize app
   fetchActivities();
